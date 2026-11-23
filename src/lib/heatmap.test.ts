@@ -53,4 +53,30 @@ describe('toHeatmapModel', () => {
     });
     expect(condition.series).toEqual([{ fieldId: 'count', rollup: 'SUM' }]);
   });
+
+  it('aggregates timestamp labels into daily cells', () => {
+    const dailyMatrix: IData = [
+      [
+        { value: '发生时间 / 状态码', text: '发生时间 / 状态码' },
+        { value: '400', text: '400' },
+        { value: '502', text: '502' },
+      ],
+      [
+        { value: '2026-11-23T10:00:00+08:00', text: '2026-11-23T10:00:00+08:00' },
+        { value: 2, text: '2' },
+        { value: 0, text: '0' },
+      ],
+      [
+        { value: '2026-11-23T14:00:00+08:00', text: '2026-11-23T14:00:00+08:00' },
+        { value: 1, text: '1' },
+        { value: 3, text: '3' },
+      ],
+    ];
+    const model = toHeatmapModel(dailyMatrix);
+    expect(model.rows).toEqual(['2026-11-23']);
+    expect(model.values).toEqual([
+      [0, 0, 3],
+      [1, 0, 3],
+    ]);
+  });
 });

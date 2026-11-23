@@ -20,21 +20,45 @@ function cellNumber(cell: IData[number][number] | undefined): number {
   return Number.isFinite(value) ? value : 0;
 }
 
+function normalizeLabel(label: string): string {
+  const match = label.match(
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s][0-2]\d:[0-5]\d(?::[0-5]\d)?(?:\S+)?)?$/,
+  );
+  if (!match) return label;
+  return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+}
+
 export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
   const header = data[0] ?? [];
   const body = data.slice(1);
-  const allColumns = header.slice(1).map(cellLabel);
-  const allRows = body.map((row) => cellLabel(row[0]));
+  const allColumns = header.slice(1).map((cell) => normalizeLabel(cellLabel(cell)));
+  const rowLabels = body.map((row) => normalizeLabel(cellLabel(row[0])));
+  const aggregated = new Map<string, number>();
 
-  const rowTotals = body.map((row, index) => ({
-    index,
-    name: allRows[index],
-    total: row.slice(1).reduce((sum, cell) => sum + cellNumber(cell), 0),
-  }));
-  const columnTotals = allColumns.map((name, index) => ({
-    index,
+  body.forEach((row, rowIndex) => {
+    const rowName = rowLabels[rowIndex];
+    row.slice(1).forEach((cell, columnIndex) => {
+      const columnName = allColumns[columnIndex];
+      const key = `${rowName}\u0000${columnName}`;
+      aggregated.set(key, (aggregated.get(key) ?? 0) + cellNumber(cell));
+    });
+  });
+
+  const uniqueRows = [...new Set(rowLabels.filter(Boolean))];
+  const uniqueColumns = [...new Set(allColumns.filter(Boolean))];
+  const rowTotals = uniqueRows.map((name) => ({
     name,
-    total: body.reduce((sum, row) => sum + cellNumber(row[index + 1]), 0),
+    total: uniqueColumns.reduce(
+      (sum, column) => sum + (aggregated.get(`${name}\u0000${column}`) ?? 0),
+      0,
+    ),
+  }));
+  const columnTotals = uniqueColumns.map((name) => ({
+    name,
+    total: uniqueRows.reduce(
+      (sum, row) => sum + (aggregated.get(`${row}\u0000${name}`) ?? 0),
+      0,
+    ),
   }));
 
   const keptRows = rowTotals
@@ -52,7 +76,7 @@ export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
 
   keptRows.forEach((row, y) => {
     keptColumns.forEach((column, x) => {
-      const value = cellNumber(body[row.index]?.[column.index + 1]);
+      const value = aggregated.get(`${row.name}\u0000${column.name}`) ?? 0;
       values.push([x, y, value]);
       maxValue = Math.max(maxValue, value);
       total += value;
@@ -65,7 +89,9 @@ export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
     values,
     maxValue,
     total,
-    truncated: keptRows.length < allRows.length || keptColumns.length < allColumns.length,
+    truncated:
+      keptRows.length < uniqueRows.length ||
+      keptColumns.length < uniqueColumns.length,
   };
 }
 
