@@ -100,4 +100,45 @@ describe('toHeatmapModel', () => {
       '2026-11-23',
     ]);
   });
+
+  it('formats zoned timestamps in Asia/Taipei before grouping', () => {
+    const zoned: IData = [
+      [
+        { value: 'date / status', text: 'date / status' },
+        { value: '503', text: '503' },
+      ],
+      [
+        { value: '2026-11-23T10:00:00+08:00', text: '2026-11-23T10:00:00+08:00' },
+        { value: 1, text: '1' },
+      ],
+      [
+        { value: '2026-11-23T23:30:00Z', text: '2026-11-23T23:30:00Z' },
+        { value: 2, text: '2' },
+      ],
+    ];
+    expect(toHeatmapModel(zoned).rows).toEqual([
+      '2026-11-23',
+      '2026-11-24',
+    ]);
+  });
+
+  it('keeps the newest ten daily rows instead of the highest-volume dates', () => {
+    const dailyRows: IData = [
+      [
+        { value: 'date / status', text: 'date / status' },
+        { value: '503', text: '503' },
+      ],
+      ...Array.from({ length: 11 }, (_, index) => {
+        const date = `2026-11-${String(index + 10).padStart(2, '0')}`;
+        return [
+          { value: date, text: date },
+          { value: index === 0 ? 1000 : index, text: String(index) },
+        ];
+      }),
+    ];
+    const model = toHeatmapModel(dailyRows);
+    expect(model.rows[0]).toBe('2026-11-11');
+    expect(model.rows.at(-1)).toBe('2026-11-20');
+    expect(model.rows).not.toContain('2026-11-10');
+  });
 });

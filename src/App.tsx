@@ -31,7 +31,9 @@ function stateName() {
 }
 
 export function App() {
-  const currentState = stateName();
+  const [currentState, setCurrentState] = useState<DashboardState | undefined>(
+    () => stateName(),
+  );
   const isEmbedded = window.parent !== window;
   const isDemoConfig =
     import.meta.env.DEV &&
@@ -50,7 +52,18 @@ export function App() {
   const [renderData, setRenderData] = useState<IData>(isHosted ? [] : mockMatrix);
   const [loading, setLoading] = useState(isConfigState);
   const [hostReady, setHostReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const model = useMemo(() => toHeatmapModel(renderData), [renderData]);
+
+  useEffect(() => {
+    const syncState = () => setCurrentState(stateName());
+    window.addEventListener('hashchange', syncState);
+    const timer = window.setInterval(syncState, 1000);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('hashchange', syncState);
+    };
+  }, []);
 
   async function loadTableOptions() {
     const tableList = await bitable.base.getTableList();
@@ -126,7 +139,9 @@ export function App() {
     const tableName =
       tableOptions.find((table) => table.tableId === tableId)?.tableName ?? '';
     const metricFieldId =
-      nextConfig.metricFieldId ?? defaultMetric(fieldOptions, tableName);
+      nextConfig.metricFieldId === undefined
+        ? defaultMetric(fieldOptions, tableName) ?? null
+        : nextConfig.metricFieldId;
 
     return {
       tableId,
@@ -139,8 +154,11 @@ export function App() {
 
   async function preview(nextConfig: HeatmapConfig) {
     setLoading(true);
+    setError(null);
     try {
       setRenderData(await dashboard.getPreviewData(buildCondition(nextConfig)));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '预览数据加载失败');
     } finally {
       setLoading(false);
     }
@@ -151,6 +169,8 @@ export function App() {
     let disposed = false;
 
     async function init() {
+      setError(null);
+      setLoading(isConfigState);
       if (isDemoConfig) {
         const demoFields: FieldOption[] = [
           { fieldId: 'model', fieldName: '模型', fieldType: FieldType.Text },
@@ -179,39 +199,59 @@ export function App() {
         return;
       }
 
-      const configResult =
-        currentState === DashboardState.Config
-          ? await dashboard.getConfig()
-          : { dataConditions: [] };
-      if (disposed) return;
-      const hostCondition: IDataCondition | undefined = configResult.dataConditions?.[0];
-      const resolved = await resolveConfig(
-        hostCondition ? conditionToConfig(hostCondition, EMPTY_CONFIG) : EMPTY_CONFIG,
-      );
-      if (disposed) return;
-      setConfig(resolved);
-      setHostReady(true);
-      setRenderData(await dashboard.getPreviewData(buildCondition(resolved)));
-      if (!disposed) setLoading(false);
+      try {
+        const configResult =
+          currentState === DashboardState.Config
+            ? await dashboard.getConfig()
+            : { dataConditions: [] };
+        if (disposed) return;
+        const hostCondition: IDataCondition | undefined =
+          configResult.dataConditions?.[0];
+        const resolved = await resolveConfig(
+          hostCondition
+            ? conditionToConfig(hostCondition, EMPTY_CONFIG)
+            : EMPTY_CONFIG,
+        );
+        const data = await dashboard.getPreviewData(buildCondition(resolved));
+        if (disposed) return;
+        setConfig(resolved);
+        setHostReady(true);
+        setRenderData(data);
+        setLoading(false);
+        await dashboard.setRendered();
+      } catch (caught) {
+        if (disposed) return;
+        setError(caught instanceof Error ? caught.message : '插件初始化失败');
+        setLoading(false);
+        if (!isEmbedded) setRenderData(mockMatrix);
+      }
     }
 
-    init().finally(() => {
-      if (!disposed && !isDemoConfig) dashboard.setRendered();
-    });
+    init();
     return () => {
       disposed = true;
     };
-  }, [isConfigState, isDemoConfig]);
+  }, [currentState, isConfigState, isDemoConfig]);
 
   useEffect(() => {
     if (isConfigState || !isHosted) return;
     let disposed = false;
 
     async function load() {
-      const data = await dashboard.getData();
-      if (disposed) return;
-      setRenderData(data);
-      await dashboard.setRendered();
+      setError(null);
+      setLoading(true);
+      try {
+        const data = await dashboard.getData();
+        if (disposed) return;
+        setRenderData(data);
+        await dashboard.setRendered();
+      } catch (caught) {
+        if (disposed) return;
+        setError(caught instanceof Error ? caught.message : '数据加载失败');
+        setRenderData(mockMatrix);
+      } finally {
+        if (!disposed) setLoading(false);
+      }
     }
 
     load();
@@ -221,6 +261,16 @@ export function App() {
       off();
     };
   }, [isConfigState, isHosted]);
+
+  useEffect(() => {
+    const nodes = [document.documentElement, document.body];
+    const enabled = currentState === DashboardState.FullScreen;
+    nodes.forEach((node) =>
+      node.classList.toggle('full_screen_app', enabled),
+    );
+    return () =>
+      nodes.forEach((node) => node.classList.remove('full_screen_app'));
+  }, [currentState]);
 
   async function changeConfig(patch: Partial<HeatmapConfig>) {
     let next = { ...config, ...patch };
@@ -234,7 +284,7 @@ export function App() {
         ...next,
         dataRange: rangeOptions[0]?.value ?? JSON.stringify({ type: SourceType.ALL }),
         ...defaults,
-        metricFieldId: defaultMetric(fieldOptions, tableName),
+        metricFieldId: defaultMetric(fieldOptions, tableName) ?? null,
       };
     }
     setConfig(next);
@@ -243,6 +293,7 @@ export function App() {
 
   async function saveConfig() {
     setLoading(true);
+    setError(null);
     try {
       await dashboard.saveConfig({
         dataConditions: [buildCondition(config)],
@@ -252,6 +303,8 @@ export function App() {
           metric: config.metricFieldId ?? 'records',
         },
       });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '配置保存失败');
     } finally {
       setLoading(false);
     }
@@ -261,6 +314,7 @@ export function App() {
     return (
       <main className="plugin-shell plugin-shell--config">
         <Heatmap model={model} title="异常热力矩阵" />
+        {error ? <div role="alert" className="error-banner">{error}</div> : null}
         {hostReady ? (
           <ConfigPanel
             tables={tables}
@@ -282,6 +336,7 @@ export function App() {
   return (
     <main className="plugin-shell">
       <Heatmap model={model} title="异常热力矩阵" />
+      {error ? <div role="alert" className="error-banner">{error}</div> : null}
     </main>
   );
 }

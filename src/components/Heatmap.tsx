@@ -26,6 +26,18 @@ interface HeatmapProps {
 }
 
 const numberFormat = new Intl.NumberFormat('zh-CN');
+const escapeHtml = (value: string) =>
+  value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character] ?? character,
+  );
 
 export function Heatmap({ model, title }: HeatmapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +72,9 @@ export function Heatmap({ model, title }: HeatmapProps) {
     [model],
   );
 
+  const matrixValue = (x: number, y: number) =>
+    model.values.find(([cellX, cellY]) => cellX === x && cellY === y)?.[2] ?? 0;
+
   useEffect(() => {
     const element = containerRef.current;
     if (!element || !model.rows.length || !model.columns.length) return;
@@ -84,7 +99,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
         formatter: (params: unknown) => {
           const value = (params as { value: [number, number, number] }).value;
           const [x, y, count] = value;
-          return `${model.rows[y]}<br>${model.columns[x]}<br><b>${numberFormat.format(count)} 次</b>`;
+          return `${escapeHtml(model.rows[y])}<br>${escapeHtml(model.columns[x])}<br><b>${numberFormat.format(count)} 次</b>`;
         },
       },
       xAxis: {
@@ -199,6 +214,29 @@ export function Heatmap({ model, title }: HeatmapProps) {
       <figcaption className="heatmap__note">
         {model.truncated ? '按异常总量保留前 10 个纵向分组与前 10 个横向分组。' : null}
       </figcaption>
+      <table className="visually-hidden" aria-label={`${title}数据表`}>
+        <caption>{title}数据表</caption>
+        <thead>
+          <tr>
+            <th scope="col">纵向分组</th>
+            {model.columns.map((column) => (
+              <th key={column} scope="col">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {model.rows.map((row, y) => (
+            <tr key={row}>
+              <th scope="row">{row}</th>
+              {model.columns.map((column, x) => (
+                <td key={`${row}|${column}`}>{numberFormat.format(matrixValue(x, y))}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </figure>
   );
 }

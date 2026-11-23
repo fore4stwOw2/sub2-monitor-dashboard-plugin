@@ -30,7 +30,7 @@ body {
 }
 
 .plugin-shell {
-  container: plugin / inline-size;
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-block-size: 100dvh;
@@ -42,6 +42,7 @@ body {
 }
 
 .heatmap {
+  container: heatmap / inline-size;
   display: grid;
   grid-template-rows: auto minmax(240px, 1fr) auto;
   min-inline-size: 0;
@@ -92,7 +93,7 @@ body {
 
 .heatmap__facts small {
   margin-block-start: 5px;
-  color: #8b95a5;
+  color: #667085;
   font-size: 0.65rem;
   letter-spacing: 0;
 }
@@ -161,7 +162,7 @@ body {
 .heatmap__note {
   min-block-size: 18px;
   margin: 0;
-  color: #8b95a5;
+  color: #667085;
   font-size: 0.68rem;
 }
 
@@ -231,6 +232,32 @@ body {
   opacity: 0.65;
 }
 
+.error-banner {
+  position: absolute;
+  inset-inline: 16px;
+  inset-block-end: 16px;
+  z-index: 10;
+  padding: 10px 12px;
+  color: #7a271a;
+  background: #fef3f2;
+  border: 1px solid #fda29b;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 @media (max-width: 760px) {
   .plugin-shell--config {
     grid-template-columns: minmax(0, 1fr);
@@ -244,7 +271,7 @@ body {
   }
 }
 
-@container plugin (inline-size < 480px) {
+@container heatmap (inline-size < 480px) {
   .heatmap {
     padding: 14px;
   }
@@ -258,7 +285,7 @@ body {
   }
 }
 
-@container plugin (inline-size < 560px) {
+@container heatmap (inline-size < 560px) {
   .heatmap__canvas {
     display: none;
   }

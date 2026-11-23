@@ -89,7 +89,7 @@ export function ConfigPanel({
             value={config.metricFieldId ?? ''}
             onChange={(event) =>
               onChange({
-                metricFieldId: event.target.value || undefined,
+                metricFieldId: event.target.value || null,
               })
             }
           >

@@ -16,7 +16,8 @@ export interface HeatmapConfig {
   rowFieldId: string;
   columnFieldId: string;
   dataRange: string;
-  metricFieldId?: string;
+  /** undefined means “not configured yet”; null means explicitly use record count. */
+  metricFieldId?: string | null;
 }
 
 export interface HeatmapModel {

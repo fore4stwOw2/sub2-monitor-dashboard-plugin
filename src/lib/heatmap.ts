@@ -22,10 +22,20 @@ function cellNumber(cell: IData[number][number] | undefined): number {
 
 function normalizeLabel(label: string): string {
   const match = label.match(
-    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s][0-2]\d:[0-5]\d(?::[0-5]\d)?(?:\S+)?)?$/,
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T ](\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/,
   );
   if (!match) return label;
-  return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+  const calendarDate = `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+  if (!match[4] || !match[7]) return calendarDate;
+
+  const parsed = new Date(label.replaceAll('/', '-'));
+  if (Number.isNaN(parsed.getTime())) return calendarDate;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(parsed);
 }
 
 export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
@@ -65,12 +75,14 @@ export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
   const columnsAreDates = uniqueColumns.every((name) =>
     /^\d{4}-\d{2}-\d{2}$/.test(name),
   );
-  const keptRows = rowTotals
+  const sortedRows = rowTotals
     .filter((item) => item.name)
     .sort((a, b) =>
       rowsAreDates ? a.name.localeCompare(b.name) : b.total - a.total,
-    )
-    .slice(0, topN);
+    );
+  const keptRows = rowsAreDates
+    ? sortedRows.slice(Math.max(0, sortedRows.length - topN))
+    : sortedRows.slice(0, topN);
   const keptColumns = columnTotals
     .filter((item) => item.name)
     .sort((a, b) =>
@@ -145,7 +157,7 @@ export function conditionToConfig(
     columnFieldId: condition.groups?.[1]?.fieldId || fallback.columnFieldId,
     dataRange: JSON.stringify(condition.dataRange ?? { type: SourceType.ALL }),
     metricFieldId: Array.isArray(condition.series)
-      ? condition.series[0]?.fieldId
-      : undefined,
+      ? condition.series[0]?.fieldId ?? null
+      : null,
   };
 }
