@@ -72,9 +72,6 @@ export function Heatmap({ model, title }: HeatmapProps) {
     [model],
   );
 
-  const matrixValue = (x: number, y: number) =>
-    model.values.find(([cellX, cellY]) => cellX === x && cellY === y)?.[2] ?? 0;
-
   useEffect(() => {
     const element = containerRef.current;
     if (!element || !model.rows.length || !model.columns.length) return;
@@ -214,33 +211,13 @@ export function Heatmap({ model, title }: HeatmapProps) {
       <figcaption className="heatmap__note">
         {model.truncated ? '按异常总量保留前 10 个纵向分组与前 10 个横向分组。' : null}
       </figcaption>
-      <div className="visually-hidden">
-        <table aria-label={`${title}数据表`}>
-          <caption>{title}数据表</caption>
-          <thead>
-            <tr>
-              <th scope="col">纵向分组</th>
-              {model.columns.map((column) => (
-                <th key={column} scope="col">
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {model.rows.map((row, y) => (
-              <tr key={row}>
-                <th scope="row">{row}</th>
-                {model.columns.map((column, x) => (
-                  <td key={`${row}|${column}`}>
-                    {numberFormat.format(matrixValue(x, y))}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="visually-hidden" aria-label={`${title}高频分组`}>
+        {topPairs.map((pair) => (
+          <li key={`screen-reader-${pair.model}|${pair.account}`}>
+            {pair.model}，{pair.account}，{numberFormat.format(pair.count)}
+          </li>
+        ))}
+      </ul>
     </figure>
   );
 }
