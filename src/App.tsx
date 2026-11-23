@@ -161,7 +161,10 @@ export function App() {
         return;
       }
 
-      const configResult = await dashboard.getConfig();
+      const configResult =
+        currentState === DashboardState.Config
+          ? await dashboard.getConfig()
+          : { dataConditions: [] };
       if (disposed) return;
       const hostCondition: IDataCondition | undefined = configResult.dataConditions?.[0];
       const resolved = await resolveConfig(
