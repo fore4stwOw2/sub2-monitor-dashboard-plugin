@@ -248,7 +248,7 @@ export function App() {
       } catch (caught) {
         if (disposed) return;
         setError(caught instanceof Error ? caught.message : '数据加载失败');
-        setRenderData(mockMatrix);
+        setRenderData([]);
       } finally {
         if (!disposed) setLoading(false);
       }
