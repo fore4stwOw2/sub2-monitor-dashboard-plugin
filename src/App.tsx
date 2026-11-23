@@ -238,7 +238,7 @@ export function App() {
   if (isConfigState) {
     return (
       <main className="plugin-shell plugin-shell--config">
-        <Heatmap model={model} title="模型 × 账号异常热力" />
+        <Heatmap model={model} title="异常热力矩阵" />
         {hostReady ? (
           <ConfigPanel
             tables={tables}
@@ -256,7 +256,7 @@ export function App() {
 
   return (
     <main className="plugin-shell">
-      <Heatmap model={model} title="模型 × 账号异常热力" />
+      <Heatmap model={model} title="异常热力矩阵" />
     </main>
   );
 }

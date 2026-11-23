@@ -41,7 +41,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
     );
     const row = model.rows[top[1]];
     const column = model.columns[top[0]];
-    return `${title}：显示 ${model.rows.length} 个模型、${model.columns.length} 个账号，最高异常数为 ${numberFormat.format(
+    return `${title}：显示 ${model.rows.length} 个纵向分组、${model.columns.length} 个横向分组，最高异常数为 ${numberFormat.format(
       top[2],
     )}，位于 ${row} / ${column}。`;
   }, [model, title]);
@@ -197,7 +197,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
         <div className="heatmap__empty">当前无数据</div>
       )}
       <figcaption className="heatmap__note">
-        {model.truncated ? '按异常总量保留前 10 个模型与前 10 个账号。' : null}
+        {model.truncated ? '按异常总量保留前 10 个纵向分组与前 10 个横向分组。' : null}
       </figcaption>
     </figure>
   );
