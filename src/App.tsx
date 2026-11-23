@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   DashboardState,
+  FieldType,
   SourceType,
   bitable,
   dashboard,
@@ -68,6 +69,7 @@ export function App() {
     const options = categories.map((field) => ({
       fieldId: field.fieldId,
       fieldName: field.fieldName,
+      fieldType: field.fieldType,
     }));
     setFields(options);
     return options;
@@ -97,6 +99,16 @@ export function App() {
     };
   }
 
+  function defaultMetric(
+    options: FieldOption[],
+    tableName: string,
+  ): string | undefined {
+    if (tableName === '按日汇总') {
+      return options.find((field) => field.fieldName === '次数')?.fieldId;
+    }
+    return undefined;
+  }
+
   async function resolveConfig(nextConfig: HeatmapConfig): Promise<HeatmapConfig> {
     const tableOptions = tables.length ? tables : await loadTableOptions();
     let tableId = nextConfig.tableId;
@@ -111,12 +123,17 @@ export function App() {
     const range = rangeOptions[0]?.value ?? JSON.stringify({ type: SourceType.ALL });
     const fieldOptions = fields.length ? fields : await loadFieldOptions(tableId);
     const defaults = defaultFields(fieldOptions);
+    const tableName =
+      tableOptions.find((table) => table.tableId === tableId)?.tableName ?? '';
+    const metricFieldId =
+      nextConfig.metricFieldId ?? defaultMetric(fieldOptions, tableName);
 
     return {
       tableId,
       dataRange: nextConfig.dataRange || range,
       rowFieldId: nextConfig.rowFieldId || defaults.rowFieldId,
       columnFieldId: nextConfig.columnFieldId || defaults.columnFieldId,
+      metricFieldId,
     };
   }
 
@@ -136,15 +153,16 @@ export function App() {
     async function init() {
       if (isDemoConfig) {
         const demoFields: FieldOption[] = [
-          { fieldId: 'model', fieldName: '模型' },
-          { fieldId: 'account', fieldName: '账号' },
-          { fieldId: 'status', fieldName: '状态码' },
+          { fieldId: 'model', fieldName: '模型', fieldType: FieldType.Text },
+          { fieldId: 'account', fieldName: '账号', fieldType: FieldType.Text },
+          { fieldId: 'status', fieldName: '状态码', fieldType: FieldType.Text },
         ];
         const demoConfig: HeatmapConfig = {
           tableId: 'tbl-events-demo',
           dataRange: JSON.stringify({ type: SourceType.ALL }),
           rowFieldId: 'model',
           columnFieldId: 'account',
+          metricFieldId: undefined,
         };
         setTables([{ tableId: 'tbl-events-demo', tableName: '异常明细' }]);
         setFields(demoFields);
@@ -210,10 +228,13 @@ export function App() {
       const rangeOptions = await loadRanges(patch.tableId);
       const fieldOptions = await loadFieldOptions(patch.tableId);
       const defaults = defaultFields(fieldOptions);
+      const tableName =
+        tables.find((table) => table.tableId === patch.tableId)?.tableName ?? '';
       next = {
         ...next,
         dataRange: rangeOptions[0]?.value ?? JSON.stringify({ type: SourceType.ALL }),
         ...defaults,
+        metricFieldId: defaultMetric(fieldOptions, tableName),
       };
     }
     setConfig(next);
@@ -228,6 +249,7 @@ export function App() {
         customConfig: {
           rows: config.rowFieldId,
           columns: config.columnFieldId,
+          metric: config.metricFieldId ?? 'records',
         },
       });
     } finally {
@@ -243,6 +265,9 @@ export function App() {
           <ConfigPanel
             tables={tables}
             fields={fields}
+            numberFields={fields.filter(
+              (field) => field.fieldType === FieldType.Number,
+            )}
             dataRanges={dataRanges}
             config={config}
             loading={loading}

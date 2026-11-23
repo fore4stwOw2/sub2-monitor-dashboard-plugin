@@ -1,8 +1,9 @@
-import type { IData, IDataCondition } from '@lark-base-open/js-sdk';
+import type { FieldType, IData, IDataCondition } from '@lark-base-open/js-sdk';
 
 export interface FieldOption {
   fieldId: string;
   fieldName: string;
+  fieldType: FieldType;
 }
 
 export interface TableOption {
@@ -15,6 +16,7 @@ export interface HeatmapConfig {
   rowFieldId: string;
   columnFieldId: string;
   dataRange: string;
+  metricFieldId?: string;
 }
 
 export interface HeatmapModel {

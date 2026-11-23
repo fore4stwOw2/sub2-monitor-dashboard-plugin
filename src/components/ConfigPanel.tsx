@@ -4,6 +4,7 @@ import type { HeatmapConfig, TableOption, FieldOption } from '../types';
 interface ConfigPanelProps {
   tables: TableOption[];
   fields: FieldOption[];
+  numberFields: FieldOption[];
   dataRanges: Array<{ value: string; label: string }>;
   config: HeatmapConfig;
   loading: boolean;
@@ -14,6 +15,7 @@ interface ConfigPanelProps {
 export function ConfigPanel({
   tables,
   fields,
+  numberFields,
   dataRanges,
   config,
   loading,
@@ -77,6 +79,24 @@ export function ConfigPanel({
             {fields.map((field) => (
               <option key={field.fieldId} value={field.fieldId}>
                 {field.fieldName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>数值字段</span>
+          <select
+            value={config.metricFieldId ?? ''}
+            onChange={(event) =>
+              onChange({
+                metricFieldId: event.target.value || undefined,
+              })
+            }
+          >
+            <option value="">按记录数</option>
+            {numberFields.map((field) => (
+              <option key={field.fieldId} value={field.fieldId}>
+                {field.fieldName}（求和）
               </option>
             ))}
           </select>

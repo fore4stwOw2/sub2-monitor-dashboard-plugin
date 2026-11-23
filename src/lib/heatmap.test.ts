@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IData } from '@lark-base-open/js-sdk';
-import { toHeatmapModel } from './heatmap';
+import { buildCondition, toHeatmapModel } from './heatmap';
 
 const matrix: IData = [
   [
@@ -41,5 +41,16 @@ describe('toHeatmapModel', () => {
     expect(model.rows).toEqual(['model-a']);
     expect(model.columns).toEqual(['account-a']);
     expect(model.truncated).toBe(true);
+  });
+
+  it('uses a numeric field sum when configured', () => {
+    const condition = buildCondition({
+      tableId: 'daily',
+      rowFieldId: 'date',
+      columnFieldId: 'status',
+      dataRange: JSON.stringify({ type: 'ALL' }),
+      metricFieldId: 'count',
+    });
+    expect(condition.series).toEqual([{ fieldId: 'count', rollup: 'SUM' }]);
   });
 });

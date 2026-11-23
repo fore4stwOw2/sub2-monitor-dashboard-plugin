@@ -3,6 +3,7 @@ import {
   DATA_SOURCE_SORT_TYPE,
   GroupMode,
   ORDER,
+  Rollup,
   SourceType,
 } from '@lark-base-open/js-sdk';
 import type { HeatmapConfig, HeatmapModel } from '../types';
@@ -82,7 +83,9 @@ export function buildCondition(config: HeatmapConfig): IDataCondition {
   return {
     tableId: config.tableId,
     dataRange: parseDataRange(config.dataRange),
-    series: 'COUNTA',
+    series: config.metricFieldId
+      ? [{ fieldId: config.metricFieldId, rollup: Rollup.SUM }]
+      : 'COUNTA',
     groups: [
       {
         fieldId: config.rowFieldId,
@@ -107,5 +110,8 @@ export function conditionToConfig(
     rowFieldId: condition.groups?.[0]?.fieldId || fallback.rowFieldId,
     columnFieldId: condition.groups?.[1]?.fieldId || fallback.columnFieldId,
     dataRange: JSON.stringify(condition.dataRange ?? { type: SourceType.ALL }),
+    metricFieldId: Array.isArray(condition.series)
+      ? condition.series[0]?.fieldId
+      : undefined,
   };
 }
