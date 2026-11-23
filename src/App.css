@@ -1,0 +1,279 @@
+:root {
+  font-family:
+    "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    sans-serif;
+  color: #243244;
+  background: #f8fafb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-inline-size: 100%;
+  min-block-size: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f8fafb;
+}
+
+.full_screen_app {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.plugin-shell {
+  container: plugin / inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-block-size: 100dvh;
+  background: #f8fafb;
+}
+
+.plugin-shell--config {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-rows: auto minmax(240px, 1fr) auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  margin: 0;
+  padding: clamp(16px, 3cqi, 28px);
+  background: #f8fafb;
+  overflow: clip;
+}
+
+.heatmap__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block-end: 12px;
+}
+
+.heatmap h2 {
+  margin: 0;
+  color: #1d2939;
+  font-size: clamp(1rem, 2.2cqi, 1.35rem);
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.heatmap__summary {
+  max-inline-size: 70ch;
+  margin-block: 6px 0;
+  color: #667085;
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.heatmap__facts {
+  display: grid;
+  justify-items: end;
+  flex: 0 0 auto;
+  min-inline-size: 88px;
+}
+
+.heatmap__facts span {
+  color: #0f4c45;
+  font-size: clamp(1.25rem, 3cqi, 2rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.heatmap__facts small {
+  margin-block-start: 5px;
+  color: #8b95a5;
+  font-size: 0.65rem;
+  letter-spacing: 0;
+}
+
+.heatmap__canvas {
+  display: block;
+  min-inline-size: 0;
+  min-block-size: 240px;
+}
+
+.heatmap__mobile {
+  display: none;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.heatmap__mobile li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-block-size: 52px;
+  padding-block: 8px;
+  border-block-end: 1px solid #e4e7ec;
+}
+
+.heatmap__mobile-main {
+  display: grid;
+  min-inline-size: 0;
+  gap: 3px;
+}
+
+.heatmap__mobile-main strong {
+  overflow: hidden;
+  color: #344054;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heatmap__mobile-main span {
+  overflow: hidden;
+  color: #667085;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heatmap__mobile li > b {
+  flex: 0 0 auto;
+  color: #0f4c45;
+  font-size: 1rem;
+}
+
+.heatmap__empty {
+  display: grid;
+  place-items: center;
+  min-block-size: 240px;
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+.heatmap__note {
+  min-block-size: 18px;
+  margin: 0;
+  color: #8b95a5;
+  font-size: 0.68rem;
+}
+
+.config-panel {
+  position: sticky;
+  inset-block-start: 0;
+  align-self: start;
+  min-block-size: 100dvh;
+  padding: 20px;
+  overflow: auto;
+  background: #ffffff;
+  border-inline-start: 1px solid #e4e7ec;
+}
+
+.config-panel h2 {
+  margin: 0 0 18px;
+  color: #1d2939;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.config-panel form {
+  display: grid;
+  gap: 14px;
+}
+
+.config-panel label {
+  display: grid;
+  gap: 6px;
+  color: #344054;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.config-panel select {
+  min-block-size: 36px;
+  inline-size: 100%;
+  padding-inline: 10px;
+  color: #1d2939;
+  background: #ffffff;
+  border: 1px solid #cfd5dd;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.config-panel select:focus-visible,
+.config-panel button:focus-visible {
+  outline: 3px solid #2c8577;
+  outline-offset: 2px;
+}
+
+.config-panel button {
+  min-block-size: 38px;
+  margin-block-start: 6px;
+  color: #ffffff;
+  background: #2c8577;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.config-panel button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .plugin-shell--config {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .config-panel {
+    position: static;
+    min-block-size: auto;
+    border-block-start: 1px solid #e4e7ec;
+    border-inline-start: 0;
+  }
+}
+
+@container plugin (inline-size < 480px) {
+  .heatmap {
+    padding: 14px;
+  }
+
+  .heatmap__heading {
+    gap: 10px;
+  }
+
+  .heatmap__summary {
+    font-size: 0.7rem;
+  }
+}
+
+@container plugin (inline-size < 560px) {
+  .heatmap__canvas {
+    display: none;
+  }
+
+  .heatmap__mobile {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
