@@ -79,4 +79,25 @@ describe('toHeatmapModel', () => {
       [1, 0, 3],
     ]);
   });
+
+  it('orders daily rows chronologically even when totals differ', () => {
+    const chronological: IData = [
+      [
+        { value: 'date / status', text: 'date / status' },
+        { value: '200', text: '200' },
+      ],
+      [
+        { value: '2026-11-23', text: '2026-11-23' },
+        { value: 100, text: '100' },
+      ],
+      [
+        { value: '2026-11-22', text: '2026-11-22' },
+        { value: 1, text: '1' },
+      ],
+    ];
+    expect(toHeatmapModel(chronological).rows).toEqual([
+      '2026-11-22',
+      '2026-11-23',
+    ]);
+  });
 });

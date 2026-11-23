@@ -61,13 +61,21 @@ export function toHeatmapModel(data: IData, topN = TOP_N): HeatmapModel {
     ),
   }));
 
+  const rowsAreDates = uniqueRows.every((name) => /^\d{4}-\d{2}-\d{2}$/.test(name));
+  const columnsAreDates = uniqueColumns.every((name) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(name),
+  );
   const keptRows = rowTotals
     .filter((item) => item.name)
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) =>
+      rowsAreDates ? a.name.localeCompare(b.name) : b.total - a.total,
+    )
     .slice(0, topN);
   const keptColumns = columnTotals
     .filter((item) => item.name)
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) =>
+      columnsAreDates ? a.name.localeCompare(b.name) : b.total - a.total,
+    )
     .slice(0, topN);
 
   const values: Array<[number, number, number]> = [];
