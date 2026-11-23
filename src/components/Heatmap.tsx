@@ -53,7 +53,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
     );
     const row = model.rows[top[1]];
     const column = model.columns[top[0]];
-    return `${title}：显示 ${model.rows.length} 个纵向分组、${model.columns.length} 个横向分组，最高异常数为 ${numberFormat.format(
+    return `${title}：显示 ${model.rows.length} 个纵向分组、${model.columns.length} 个横向分组，最高数值为 ${numberFormat.format(
       top[2],
     )}，位于 ${row} / ${column}。`;
   }, [model, title]);
@@ -99,7 +99,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
         formatter: (params: unknown) => {
           const value = (params as { value: [number, number, number] }).value;
           const [x, y, count] = value;
-          return `${escapeHtml(model.rows[y])}<br>${escapeHtml(model.columns[x])}<br><b>${numberFormat.format(count)} 次</b>`;
+          return `${escapeHtml(model.rows[y])}<br>${escapeHtml(model.columns[x])}<br><b>${numberFormat.format(count)}</b>`;
         },
       },
       xAxis: {
@@ -190,7 +190,7 @@ export function Heatmap({ model, title }: HeatmapProps) {
         </div>
         <div className="heatmap__facts" aria-label="矩阵统计">
           <span>{numberFormat.format(model.total)}</span>
-          <small>Top 交叉异常</small>
+          <small>矩阵合计</small>
         </div>
       </div>
       {model.rows.length && model.columns.length ? (
